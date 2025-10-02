@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>深度診斷報告樣本｜星級引擎</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --primary: #0f172a;
+      --secondary: #1d4ed8;
+      --accent: #f97316;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #f97316;
+      --success: #10b981;
+      --shadow: 0 28px 60px -40px rgba(15, 23, 42, 0.45);
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 20% 20%, rgba(29, 78, 216, 0.12), transparent 45%),
+                  radial-gradient(circle at 80% 10%, rgba(16, 185, 129, 0.12), transparent 40%),
+                  var(--bg);
+      font-family: 'Noto Sans TC', sans-serif;
+      color: var(--primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    .hero {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .hero__mark {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #1d4ed8, #0f172a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: 0.08em;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .tagline {
+      margin: 0;
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    .disclaimer {
+      margin: 12px 0 36px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 28px 32px;
+      margin-bottom: 28px;
+      border: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .card h2 {
+      margin: 0 0 20px;
+      font-size: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .stats__item {
+      background: #eef2ff;
+      border-radius: 18px;
+      padding: 18px;
+      border: 1px solid rgba(79, 70, 229, 0.12);
+    }
+
+    .stats__item--alert {
+      background: #fff7ed;
+      border-color: rgba(249, 115, 22, 0.18);
+    }
+
+    .stats__label {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .stats__value {
+      margin: 4px 0 0;
+      font-size: 26px;
+      font-weight: 700;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .bullet-list {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--primary);
+    }
+
+    .bullet-list li {
+      margin-bottom: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(30, 64, 175, 0.1);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 13px;
+      color: var(--secondary);
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .strategy-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    .strategy-card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      background: linear-gradient(135deg, rgba(226, 232, 240, 0.45), rgba(255, 255, 255, 0.9));
+    }
+
+    .strategy-card h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .cta {
+      margin-top: 36px;
+      padding: 32px;
+      border-radius: 26px;
+      background: linear-gradient(135deg, #0f172a, #1d4ed8);
+      color: #fff;
+      text-align: center;
+      box-shadow: 0 30px 70px -40px rgba(15, 23, 42, 0.7);
+    }
+
+    .cta h2 {
+      margin: 0 0 12px;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .cta p {
+      margin: 0 0 22px;
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.82);
+    }
+
+    .cta a {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 26px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 16px;
+      text-decoration: none;
+      color: #0f172a;
+      background: #ffffff;
+      box-shadow: 0 12px 40px -20px rgba(255, 255, 255, 0.9);
+      transition: transform 0.2s ease;
+    }
+
+    .cta a:hover {
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 640px) {
+      .card {
+        padding: 22px 20px;
+      }
+      .strategy-grid {
+        grid-template-columns: 1fr;
+      }
+      .stats__value {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="hero">
+      <div class="hero__mark">SE</div>
+      <div>
+        <h1>深度診斷報告樣本</h1>
+        <p class="tagline">以下內容為授權後即時生成的顧問級分析示例，真實報告會根據您的 Google Business Profile 最新數據更新。</p>
+      </div>
+    </div>
+
+    <p class="disclaimer">⚠️ 根據您剛才的 <strong>{{currentRating}} ★</strong> 資訊建立樣本（部分洞察為說明用途），讓您先看見問題輪廓與解法。</p>
+
+    <section class="card" aria-labelledby="summary">
+      <h2 id="summary">摘要總覽</h2>
+      <div class="stats">
+        <div class="stats__item stats__item--alert">
+          <p class="stats__label">危機提醒</p>
+          <p class="stats__value">{{hookLine}}</p>
+          <p class="stats__label">近 30 天提及 <strong>{{issueLabel}}</strong> 的低評：<strong>{{issueCount}} 則</strong></p>
+        </div>
+        <div class="stats__item">
+          <p class="stats__label">目前評分</p>
+          <p class="stats__value">{{currentRating}} ★</p>
+          <p class="stats__label">評論 {{currentReviewCount}} 則</p>
+        </div>
+        <div class="stats__item">
+          <p class="stats__label">競品評分</p>
+          <p class="stats__value">{{competitorRating}} ★</p>
+          <p class="stats__label">主要競品評論 {{competitorReviewCount}} 則</p>
+        </div>
+        <div class="stats__item">
+          <p class="stats__label">預估營收損失</p>
+          <p class="stats__value">${{revenueLoss}}</p>
+          <p class="stats__label">若不即時處理，每月恐流失</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="diagnose">
+      <h2 id="diagnose">關鍵問題診斷</h2>
+      <div class="pill">重點問題｜{{issueLabel}}</div>
+      <ul class="bullet-list">
+        <li>{{issueSummary}}</li>
+        <li>{{competitorGap}}</li>
+        <li>{{reviewUrgency}}</li>
+      </ul>
+    </section>
+
+    <section class="card" aria-labelledby="insights">
+      <h2 id="insights">深度洞察</h2>
+      <ul class="bullet-list">
+        <li>{{insightOne}}</li>
+        <li>{{insightTwo}}</li>
+        <li>{{insightThree}}</li>
+      </ul>
+    </section>
+
+    <section class="card" aria-labelledby="strategy">
+      <h2 id="strategy">策略行動建議</h2>
+      <div class="strategy-grid">
+        <div class="strategy-card">
+          <h3>立即行動（1~7 天）</h3>
+          <ul class="bullet-list">
+            <li>{{planImmediate1}}</li>
+            <li>{{planImmediate2}}</li>
+          </ul>
+        </div>
+        <div class="strategy-card">
+          <h3>中期策略（1~4 週）</h3>
+          <ul class="bullet-list">
+            <li>{{planMid1}}</li>
+            <li>{{planMid2}}</li>
+          </ul>
+        </div>
+        <div class="strategy-card">
+          <h3>長期目標（1~3 個月）</h3>
+          <ul class="bullet-list">
+            <li>{{planLong1}}</li>
+            <li>{{planLong2}}</li>
+          </ul>
+        </div>
+      </div>
+      <p class="disclaimer">授權後，我們會自動化追蹤以上指標、生成例行報表，並由顧問團隊持續優化。</p>
+    </section>
+
+    <section class="cta">
+      <h2>準備好啟動升星計畫了嗎？</h2>
+      <p>完成 30 秒授權，我們會即刻展開完整診斷、建議與代管執行，協助您把握每一位顧客。</p>
+      <a href="{{authUrl}}" target="_blank" rel="noopener">🚀 立即完成授權</a>
+    </section>
+  </main>
+</body>
+</html>
