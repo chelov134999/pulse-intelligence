@@ -3,317 +3,323 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>深度診斷報告樣本｜星級引擎</title>
+  <title>智慧口碑智能初檢｜樣本報表</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f5f7fb;
+      --bg: #f5f8ff;
+      --bg-glow-1: rgba(119, 170, 221, 0.18);
+      --bg-glow-2: rgba(255, 217, 187, 0.2);
       --card: #ffffff;
-      --primary: #0f172a;
-      --secondary: #1d4ed8;
-      --accent: #f97316;
-      --muted: #64748b;
-      --border: #e2e8f0;
-      --danger: #f97316;
-      --success: #10b981;
-      --shadow: 0 28px 60px -40px rgba(15, 23, 42, 0.45);
+      --stroke: rgba(21, 45, 90, 0.12);
+      --shadow: 0 28px 60px -38px rgba(15, 23, 42, 0.38);
+      --text: #12213d;
+      --muted: #4b5870;
+      --primary: #1d4ed8;
+      --primary-deep: #193fbe;
+      --accent-cool: #7a3bff;
+      --accent-warm: #ff8a4c;
+      --badge-gradient: linear-gradient(135deg, rgba(29, 78, 216, 0.95), rgba(37, 99, 235, 0.82));
+      --section-hero: linear-gradient(140deg, rgba(33, 78, 218, 0.15), rgba(151, 177, 255, 0.08));
+      --section-cool: linear-gradient(145deg, rgba(122, 59, 255, 0.14), rgba(222, 229, 255, 0.08));
+      --section-warm: linear-gradient(145deg, rgba(255, 193, 166, 0.22), rgba(255, 227, 205, 0.12));
+      --section-neutral: rgba(255, 255, 255, 0.96);
+      --font: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
     }
+
+    *, *::before, *::after { box-sizing: border-box; }
 
     body {
       margin: 0;
-      background: radial-gradient(circle at 20% 20%, rgba(29, 78, 216, 0.12), transparent 45%),
-                  radial-gradient(circle at 80% 10%, rgba(16, 185, 129, 0.12), transparent 40%),
-                  var(--bg);
-      font-family: 'Noto Sans TC', sans-serif;
-      color: var(--primary);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    .page {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 48px 24px 80px;
-    }
-
-    .hero {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 32px;
-    }
-
-    .hero__mark {
-      width: 54px;
-      height: 54px;
-      border-radius: 16px;
-      background: linear-gradient(135deg, #1d4ed8, #0f172a);
+      min-height: 100vh;
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(circle at 18% 12%, var(--bg-glow-1), transparent 46%),
+        radial-gradient(circle at 80% 16%, var(--bg-glow-2), transparent 48%),
+        linear-gradient(135deg, #f9fbff 0%, #eef4ff 58%, #e6efff 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #fff;
-      font-weight: 700;
-      font-size: 20px;
-      letter-spacing: 0.08em;
+      padding: clamp(32px, 7vw, 72px) 20px;
     }
 
-    .hero h1 {
-      margin: 0;
-      font-size: 28px;
-      font-weight: 700;
-    }
-
-    .tagline {
-      margin: 0;
-      font-size: 15px;
-      color: var(--muted);
-    }
-
-    .disclaimer {
-      margin: 12px 0 36px;
-      font-size: 14px;
-      color: var(--muted);
-    }
-
-    .card {
+    main {
+      width: min(900px, 100%);
       background: var(--card);
-      border-radius: 24px;
+      border-radius: 30px;
+      border: 1px solid var(--stroke);
       box-shadow: var(--shadow);
-      padding: 28px 32px;
-      margin-bottom: 28px;
-      border: 1px solid rgba(148, 163, 184, 0.14);
-    }
-
-    .card h2 {
-      margin: 0 0 20px;
-      font-size: 20px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .stats {
+      padding: clamp(34px, 6vw, 60px);
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: clamp(24px, 5vw, 36px);
+    }
+
+    header { display: grid; gap: 16px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 22px 10px 12px;
+      border-radius: 999px;
+      background: var(--badge-gradient);
+      color: #ffffff;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      box-shadow: 0 18px 38px -24px rgba(29, 78, 216, 0.48);
+    }
+
+    .badge img {
+      width: 34px;
+      height: 34px;
+      border-radius: 16px;
+      background: #ffffff;
+      padding: 5px;
+      box-shadow: 0 8px 18px -14px rgba(18, 33, 61, 0.52);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 4vw, 2.8rem);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    header h1::after {
+      content: '';
+      display: block;
+      width: 56px;
+      height: 3px;
+      margin-top: 12px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(29, 78, 216, 0.35), rgba(122, 59, 255, 0.42));
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.75;
+      font-size: 1.04rem;
+    }
+
+    .section-card {
+      border-radius: 26px;
+      border: 1px solid rgba(31, 63, 255, 0.08);
+      padding: clamp(26px, 5vw, 34px);
+      display: grid;
+      gap: 18px;
+      background: var(--section-neutral);
+      box-shadow: 0 14px 32px -28px rgba(18, 33, 61, 0.26);
+    }
+
+    .section-card--hero {
+      background: var(--section-hero);
+      border-color: rgba(29, 78, 216, 0.22);
+    }
+
+    .section-card--cool {
+      background: var(--section-cool);
+      border-color: rgba(122, 59, 255, 0.22);
+    }
+
+    .section-card--warm {
+      background: var(--section-warm);
+      border-color: rgba(255, 138, 76, 0.26);
+    }
+
+    .section-card h2 {
+      margin: 0;
+      font-size: 1.32rem;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .section-card .subtitle {
+      margin: -6px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      letter-spacing: 0.02em;
+    }
+
+    .metrics {
+      display: grid;
       gap: 16px;
     }
 
-    .stats__item {
-      background: #eef2ff;
-      border-radius: 18px;
-      padding: 18px;
-      border: 1px solid rgba(79, 70, 229, 0.12);
-    }
-
-    .stats__item--alert {
-      background: #fff7ed;
-      border-color: rgba(249, 115, 22, 0.18);
-    }
-
-    .stats__label {
-      margin: 0;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .stats__value {
-      margin: 4px 0 0;
-      font-size: 26px;
-      font-weight: 700;
+    .metric {
       display: flex;
+      flex-wrap: wrap;
       align-items: baseline;
-      gap: 4px;
+      gap: 12px 20px;
+      border-bottom: 1px solid rgba(18, 33, 61, 0.08);
+      padding-bottom: 14px;
     }
 
-    .bullet-list {
+    .metric:last-child { border-bottom: none; }
+
+    .metric-label { font-weight: 600; color: var(--text); }
+
+    .metric-value {
+      font-weight: 700;
+      color: var(--primary-deep);
+      font-size: 1.18rem;
+    }
+
+    .metric-detail {
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .list, .paragraph-list {
       margin: 0;
-      padding-left: 20px;
-      color: var(--primary);
+      padding-left: 22px;
+      color: var(--muted);
+      line-height: 1.78;
     }
 
-    .bullet-list li {
-      margin-bottom: 10px;
+    .paragraph-list li + li { margin-top: 10px; }
+
+    .insight {
+      background: rgba(255, 186, 145, 0.16);
+      border-left: 4px solid var(--accent-warm);
+      padding: 16px 22px;
+      border-radius: 18px;
+      color: var(--text);
+      line-height: 1.72;
+      box-shadow: inset 0 0 0 1px rgba(255, 138, 76, 0.1);
     }
 
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(30, 64, 175, 0.1);
-      border-radius: 999px;
-      padding: 6px 14px;
-      font-size: 13px;
-      color: var(--secondary);
-      font-weight: 600;
-      margin-bottom: 12px;
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
     }
 
-    .strategy-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 18px;
-    }
-
-    .strategy-card {
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 18px;
-      background: linear-gradient(135deg, rgba(226, 232, 240, 0.45), rgba(255, 255, 255, 0.9));
-    }
-
-    .strategy-card h3 {
-      margin: 0 0 10px;
-      font-size: 16px;
-      font-weight: 700;
-    }
-
-    .cta {
-      margin-top: 36px;
-      padding: 32px;
-      border-radius: 26px;
-      background: linear-gradient(135deg, #0f172a, #1d4ed8);
-      color: #fff;
+    .cta-row a {
+      flex: 1 1 220px;
       text-align: center;
-      box-shadow: 0 30px 70px -40px rgba(15, 23, 42, 0.7);
-    }
-
-    .cta h2 {
-      margin: 0 0 12px;
-      font-size: 24px;
-      font-weight: 700;
-    }
-
-    .cta p {
-      margin: 0 0 22px;
-      font-size: 15px;
-      color: rgba(255, 255, 255, 0.82);
-    }
-
-    .cta a {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 14px 26px;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: 16px;
+      padding: 16px 26px;
+      border-radius: 16px;
+      font-weight: 600;
+      font-size: 1.05rem;
       text-decoration: none;
-      color: #0f172a;
-      background: #ffffff;
-      box-shadow: 0 12px 40px -20px rgba(255, 255, 255, 0.9);
-      transition: transform 0.2s ease;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .cta a:hover {
-      transform: translateY(-2px);
+    .cta-row a.primary {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 24px 50px -28px rgba(29, 78, 216, 0.62);
+    }
+
+    .cta-row a.secondary {
+      background: rgba(29, 63, 255, 0.1);
+      color: var(--primary);
+      border: 1px solid rgba(29, 63, 255, 0.18);
+    }
+
+    .cta-row a:hover { transform: translateY(-2px); }
+
+    .note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      text-align: center;
+      line-height: 1.6;
     }
 
     @media (max-width: 640px) {
-      .card {
-        padding: 22px 20px;
-      }
-      .strategy-grid {
-        grid-template-columns: 1fr;
-      }
-      .stats__value {
-        font-size: 22px;
-      }
+      body { padding: 20px; }
+      main { border-radius: 24px; }
+      .section-card { border-radius: 22px; }
+      .cta-row a { flex: 1 1 100%; }
     }
   </style>
 </head>
 <body>
-  <main class="page">
-    <div class="hero">
-      <div class="hero__mark">SE</div>
-      <div>
-        <h1>深度診斷報告樣本</h1>
-        <p class="tagline">以下內容為授權後即時生成的顧問級分析示例，真實報告會根據您的 Google Business Profile 最新數據更新。</p>
-      </div>
-    </div>
+  <main>
+    <header>
+      <span class="badge">
+        <img src="logo.png" alt="星級引擎" />
+        <span>脈動智匯｜星級引擎</span>
+      </span>
+      <h1>智慧口碑智能初檢｜樣本報表</h1>
+      <p>以下內容為星級引擎的樣本報表：示範登入後可查看的 AI 分析、競品差距與行動建議，幫助你預覽正式版本的呈現方式。</p>
+    </header>
 
-    <p class="disclaimer">⚠️ 根據您剛才的 <strong>{{currentRating}} ★</strong> 資訊建立樣本（部分洞察為說明用途），讓您先看見問題輪廓與解法。</p>
-
-    <section class="card" aria-labelledby="summary">
-      <h2 id="summary">摘要總覽</h2>
-      <div class="stats">
-        <div class="stats__item stats__item--alert">
-          <p class="stats__label">危機提醒</p>
-          <p class="stats__value">{{hookLine}}</p>
-          <p class="stats__label">近 30 天提及 <strong>{{issueLabel}}</strong> 的低評：<strong>{{issueCount}} 則</strong></p>
+    <section class="section-card section-card--hero">
+      <h2>{{store_name}}｜{{store_rating}} ★</h2>
+      <p class="subtitle">最近 7 天評論：{{recent_reviews_count}} 筆｜1~3★ 負評：{{recent_lowstar_count}} 筆｜預估流失：NT${{potential_loss}}</p>
+      <div class="metrics">
+        <div class="metric">
+          <span class="metric-label">優先改善焦點</span>
+          <span class="metric-value">{{top_risk_theme}}</span>
+          <span class="metric-detail">目前聲量較競品高出 {{risk_gap_percent}}%</span>
         </div>
-        <div class="stats__item">
-          <p class="stats__label">目前評分</p>
-          <p class="stats__value">{{currentRating}} ★</p>
-          <p class="stats__label">評論 {{currentReviewCount}} 則</p>
+        <div class="metric">
+          <span class="metric-label">顧客等待時間</span>
+          <span class="metric-value">{{avg_wait_minutes}} 分鐘</span>
+          <span class="metric-detail">相較競品約高出 {{wait_gap_percent}}%</span>
         </div>
-        <div class="stats__item">
-          <p class="stats__label">競品評分</p>
-          <p class="stats__value">{{competitorRating}} ★</p>
-          <p class="stats__label">主要競品評論 {{competitorReviewCount}} 則</p>
-        </div>
-        <div class="stats__item">
-          <p class="stats__label">預估營收損失</p>
-          <p class="stats__value">${{revenueLoss}}</p>
-          <p class="stats__label">若不即時處理，每月恐流失</p>
+        <div class="metric">
+          <span class="metric-label">風險等級</span>
+          <span class="metric-value">{{risk_level}}</span>
+          <span class="metric-detail">建議儘速處理，預估 30 天可能流失 NT${{projected_loss}}</span>
         </div>
       </div>
     </section>
 
-    <section class="card" aria-labelledby="diagnose">
-      <h2 id="diagnose">關鍵問題診斷</h2>
-      <div class="pill">重點問題｜{{issueLabel}}</div>
-      <ul class="bullet-list">
-        <li>{{issueSummary}}</li>
-        <li>{{competitorGap}}</li>
-        <li>{{reviewUrgency}}</li>
+    <section class="section-card section-card--cool">
+      <h2>鄰近競品差距雷達</h2>
+      <p class="subtitle">半徑 {{search_radius}} 公尺內的 5 家對手，即時評估星等、評論量與回覆率。</p>
+      <ul class="list">
+        <li>{{competitor_1_name}} ｜ {{competitor_1_rating}} ★ ｜ 評論 {{competitor_1_reviews}} 筆 ｜ 近期回覆率 {{competitor_1_reply_rate}}</li>
+        <li>{{competitor_2_name}} ｜ {{competitor_2_rating}} ★ ｜ 評論 {{competitor_2_reviews}} 筆 ｜ 近期回覆率 {{competitor_2_reply_rate}}</li>
+        <li>{{competitor_3_name}} ｜ {{competitor_3_rating}} ★ ｜ 評論 {{competitor_3_reviews}} 筆 ｜ 近期回覆率 {{competitor_3_reply_rate}}</li>
+        <li>{{competitor_4_name}} ｜ {{competitor_4_rating}} ★ ｜ 評論 {{competitor_4_reviews}} 筆 ｜ 近期回覆率 {{competitor_4_reply_rate}}</li>
+        <li>{{competitor_5_name}} ｜ {{competitor_5_rating}} ★ ｜ 評論 {{competitor_5_reviews}} 筆 ｜ 近期回覆率 {{competitor_5_reply_rate}}</li>
       </ul>
     </section>
 
-    <section class="card" aria-labelledby="insights">
-      <h2 id="insights">深度洞察</h2>
-      <ul class="bullet-list">
-        <li>{{insightOne}}</li>
-        <li>{{insightTwo}}</li>
-        <li>{{insightThree}}</li>
+    <section class="section-card section-card--warm">
+      <h2>立即行動：本週三件事</h2>
+      <ul class="paragraph-list">
+        <li><strong>{{action_1_title}}</strong>：{{action_1_body}}</li>
+        <li><strong>{{action_2_title}}</strong>：{{action_2_body}}</li>
+        <li><strong>{{action_3_title}}</strong>：{{action_3_body}}</li>
       </ul>
     </section>
 
-    <section class="card" aria-labelledby="strategy">
-      <h2 id="strategy">策略行動建議</h2>
-      <div class="strategy-grid">
-        <div class="strategy-card">
-          <h3>立即行動（1~7 天）</h3>
-          <ul class="bullet-list">
-            <li>{{planImmediate1}}</li>
-            <li>{{planImmediate2}}</li>
-          </ul>
-        </div>
-        <div class="strategy-card">
-          <h3>中期策略（1~4 週）</h3>
-          <ul class="bullet-list">
-            <li>{{planMid1}}</li>
-            <li>{{planMid2}}</li>
-          </ul>
-        </div>
-        <div class="strategy-card">
-          <h3>長期目標（1~3 個月）</h3>
-          <ul class="bullet-list">
-            <li>{{planLong1}}</li>
-            <li>{{planLong2}}</li>
-          </ul>
-        </div>
+    <section class="section-card">
+      <h2>AI 回覆草稿（已替你寫好的範本）</h2>
+      <div class="insight">
+        <strong>AI 焦點 1｜{{ai_theme_1}}</strong><br />
+        {{ai_response_1}}
       </div>
-      <p class="disclaimer">授權後，我們會自動化追蹤以上指標、生成例行報表，並由顧問團隊持續優化。</p>
+      <div class="insight">
+        <strong>AI 焦點 2｜{{ai_theme_2}}</strong><br />
+        {{ai_response_2}}
+      </div>
+      <p class="note" style="text-align:left; font-size:0.95rem;">以上內容可直接貼到 LINE 官方帳號或 Google 回覆框。若需第三版草稿或其他語氣，可於正式版開通後一鍵生成。</p>
     </section>
 
-    <section class="cta">
-      <h2>準備好啟動升星計畫了嗎？</h2>
-      <p>完成 30 秒授權，我們會即刻展開完整診斷、建議與代管執行，協助您把握每一位顧客。</p>
-      <a href="{{authUrl}}" target="_blank" rel="noopener">🚀 立即完成授權</a>
+    <section class="section-card">
+      <h2>我們會如何守護你的店</h2>
+      <ul class="paragraph-list">
+        <li><strong>全面監控</strong>：24/7 追蹤所有評論、星等與競品動態，超出閾值立即 LINE 通知。</li>
+        <li><strong>智能回覆</strong>：負評生成 2~3 版草稿，含 SOP 團隊協作提醒，避免漏回覆。</li>
+        <li><strong>周/月策略報</strong>：結合評論、競品與行銷渠道，量化「失守點」與 ROI，提供決策版建議。</li>
+      </ul>
+      <div class="cta-row">
+        <a href="https://line.me/ti/p/@star-up" class="primary" target="_blank" rel="noopener">預約完整診斷</a>
+        <a href="https://chelov134999.app.n8n.cloud/pay/star-guard-4980" class="secondary" target="_blank" rel="noopener">了解專屬守護方案</a>
+      </div>
     </section>
+
+    <p class="note">完整報表可匯出 PDF / LINE Flex 卡片；資料來源含 DataForSEO、Google Places API、星級引擎 CRM 營運資料庫。登入後可查看專屬數據。</p>
   </main>
 </body>
 </html>

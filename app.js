@@ -1,520 +1,860 @@
-const form = document.getElementById('lead-form');
-const resultSection = document.getElementById('result');
-const resultMessage = document.getElementById('result-message');
-const resultJson = document.getElementById('result-json');
-const copyButton = document.getElementById('copy-button');
-const reportCard = document.getElementById('report-card');
-const statusLine = document.getElementById('status-line');
-const statusBadge = document.getElementById('webhook-status');
-const submitButton = document.querySelector('.form__submit');
-
+const params = new URLSearchParams(window.location.search);
 const config = window.STAR_ENGINE_CONFIG || {};
-const defaultWebhookUrl = 'https://chelov134999.app.n8n.cloud/webhook/lead-entry';
 
-let liffReady = false;
-let liffInClient = false;
-let liffId = new URLSearchParams(window.location.search).get('liffId') || config.liffId || window.LIFF_ID || '';
-let cachedUserId = '';
+const endpoints = {
+  lead: config.webhookUrl,
+  quiz: config.quizUrl || config.webhookUrl,
+  analysisStatus: config.analysisStatusUrl || `${config.webhookUrl}/status`,
+  weeklyDraft: config.weeklyDraftUrl || '',
+};
 
-const webhookUrl = config.webhookUrl || defaultWebhookUrl;
-const googleApiKey = (config.googlePlacesApiKey || '').trim();
-const scraperApiKey = (config.scraperApiKey || '').trim();
+const reportUrl = config.reportUrl || config.report_url || '';
+const formUrl = config.formUrl || config.form_url || window.location.href;
+const trialUrl = config.trialUrl || 'https://line.me/ti/p/@star-up';
+const planUrl = config.checkoutPrimaryUrl || config.checkout_primary_url || '#';
+const sampleReportUrl = config.sampleReportUrl || 'https://app.mdzh.io/samples/report-v1.html';
 
-async function initLiff() {
-  if (!window.liff || !liffId) {
-    console.warn('[LIFF] SDK 未載入或缺少 LIFF ID');
+const STAGES = ['s0', 's1', 's2', 's3', 's4', 's5'];
+const PROGRESS_TICKS = [
+  { percent: 45, label: '資料收集中… 進度 45%', eta: '最近 7 天評論載入中' },
+  { percent: 60, label: '正在比對競品差距… 進度 60%', eta: '附近競品完成定位' },
+  { percent: 75, label: '生成專屬草稿… 進度 75%', eta: 'AI 正撰寫回覆草稿與建議' }
+];
+const PROGRESS_TIMEOUT_MS = 75 * 1000;
+const TRANSITION_DURATION_MS = 3000;
+const POLL_INTERVAL_MS = 5000;
+const MAX_TONE_SELECTION = 2;
+const NINETY_HINT_DELAY_MS = 15_000;
+const PROGRESS_FAKE_LIMIT = PROGRESS_TICKS[0].percent;
+
+const els = {
+  stages: {
+    s0: document.getElementById('stage-s0'),
+    s1: document.getElementById('stage-s1'),
+    s2: document.getElementById('stage-s2'),
+    s3: document.getElementById('stage-s3'),
+    s4: document.getElementById('stage-s4'),
+    s5: document.getElementById('stage-s5'),
+  },
+  leadForm: document.getElementById('lead-form'),
+  submitBtn: document.getElementById('submit-btn'),
+  quizForm: document.getElementById('quiz-form'),
+  quizSubmit: document.getElementById('quiz-submit'),
+  quizSkip: document.getElementById('quiz-skip'),
+  quizError: document.getElementById('quiz-error'),
+  quizCompetitors: document.getElementById('quiz-competitors'),
+  summaryGoal: document.getElementById('summary-goal'),
+  summaryTone: document.getElementById('summary-tone'),
+  summaryCompetitors: document.getElementById('summary-competitors'),
+  summaryConfirm: document.getElementById('summary-confirm'),
+  progressBarS2: document.getElementById('progress-bar'),
+  progressLabelS2: document.getElementById('progress-label'),
+  progressEtaS2: document.getElementById('progress-eta'),
+  progressBarS3: document.getElementById('progress-bar-s3'),
+  progressLabelS3: document.getElementById('progress-label-s3'),
+  progressEtaS3: document.getElementById('progress-eta-s3'),
+  resultRadarList: document.getElementById('result-radar-list'),
+  resultActionsList: document.getElementById('result-actions-list'),
+  resultDraftsList: document.getElementById('result-drafts-list'),
+  ctaTrial: document.getElementById('cta-trial'),
+  ctaPlan: document.getElementById('cta-plan'),
+  returnHome: document.getElementById('return-home'),
+  timeoutSample: document.getElementById('timeout-sample'),
+  timeoutWeekly: document.getElementById('timeout-weekly'),
+  timeoutBack: document.getElementById('timeout-back'),
+  copyActions: document.getElementById('copy-actions'),
+  toast: document.getElementById('toast'),
+  transitionBar: document.getElementById('transition-bar'),
+  transitionCounter: document.getElementById('transition-counter'),
+  aboutLink: document.getElementById('about-link'),
+};
+
+const state = {
+  stage: 's0',
+  liffReady: false,
+  userId: '',
+  leadId: '',
+  leadPayload: null,
+  quiz: {
+    goal: '',
+    tone: [],
+    competitorsInput: [],
+  },
+  progress: {
+    startAt: 0,
+    percent: 0,
+    frontPercent: 0,
+    tickerIndex: 0,
+    timerId: null,
+    pollId: null,
+    messageId: null,
+    timeoutFired: false,
+    ninetyReachedAt: 0,
+    lastStage: '',
+  },
+  transition: {
+    countdownId: null,
+    timeoutId: null,
+  },
+  report: null,
+  mode: params.get('view') === 'report' ? 'report' : 'form',
+};
+
+function generateLeadId() {
+  const now = new Date();
+  const pad = (value) => String(value).padStart(2, '0');
+  const rand = Math.random().toString(36).slice(2, 6);
+  return `se_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}_${rand}`;
+}
+
+function showToast(message, duration = 2600) {
+  if (!els.toast) return;
+  els.toast.textContent = message;
+  els.toast.hidden = false;
+  setTimeout(() => {
+    els.toast.hidden = true;
+  }, duration);
+}
+
+function openAboutPage() {
+  const fallbackUrl = 'about.html';
+  if (state.liffReady && config.aboutUrl && window.liff?.openWindow) {
+    window.liff.openWindow({ url: config.aboutUrl, external: false });
     return;
   }
+  window.open(fallbackUrl, '_blank');
+}
+
+function setStage(nextStage) {
+  state.stage = nextStage;
+  STAGES.forEach((stage) => {
+    if (!els.stages[stage]) return;
+    const isActive = stage === nextStage;
+    els.stages[stage].hidden = !isActive;
+    if (isActive) {
+      els.stages[stage].classList.add('stage--active');
+    } else {
+      els.stages[stage].classList.remove('stage--active');
+    }
+  });
+}
+
+function updateProgressUI(percent, etaSeconds, stageLabel = '') {
+  const safePercent = Math.max(0, Math.min(100, Math.round(percent)));
+  if (safePercent >= 90 && !state.progress.ninetyReachedAt) {
+    state.progress.ninetyReachedAt = Date.now();
+  }
+
+  const elapsedSinceNinety = state.progress.ninetyReachedAt
+    ? Date.now() - state.progress.ninetyReachedAt
+    : 0;
+  const showAlmostDone = safePercent >= 90 && elapsedSinceNinety >= NINETY_HINT_DELAY_MS;
+
+  let label = stageLabel || `資料收集中… 進度 ${safePercent}%`;
+  if (showAlmostDone) {
+    label = '快完成… 智能體正在整理結果';
+  }
+
+  if (els.progressBarS2) {
+    els.progressBarS2.style.width = `${safePercent}%`;
+  }
+  if (els.progressBarS3) {
+    els.progressBarS3.style.width = `${safePercent}%`;
+  }
+  if (els.progressLabelS2) {
+    els.progressLabelS2.textContent = label;
+  }
+  if (els.progressLabelS3) {
+    els.progressLabelS3.textContent = label;
+  }
+
+  let etaLabel = '預估完成時間 60 秒內';
+  if (showAlmostDone) {
+    etaLabel = '快完成… 正在合併專屬草稿';
+  } else if (etaSeconds != null) {
+    etaLabel = `預估完成 ${Math.max(0, Math.round(etaSeconds))} 秒`;
+  }
+  if (els.progressEtaS2) {
+    els.progressEtaS2.textContent = etaLabel;
+  }
+  if (els.progressEtaS3) {
+    els.progressEtaS3.textContent = etaLabel;
+  }
+
+  state.progress.percent = safePercent;
+}
+
+function animateFrontProgress(targetPercent, duration = TRANSITION_DURATION_MS) {
+  const isStillInFakeZone = state.progress.percent < PROGRESS_FAKE_LIMIT;
+  const effectiveTarget = isStillInFakeZone
+    ? Math.min(targetPercent, PROGRESS_FAKE_LIMIT)
+    : targetPercent;
+
+  const startPercent = state.progress.frontPercent || 0;
+  const start = performance.now();
+  state.progress.frontPercent = Math.max(state.progress.frontPercent, startPercent);
+
+  const step = (now) => {
+    const elapsed = now - start;
+    const ratio = Math.min(1, elapsed / duration);
+    const current = startPercent + (effectiveTarget - startPercent) * ratio;
+    if (current > state.progress.percent) {
+      updateProgressUI(current);
+    }
+    if (ratio < 1 && state.stage !== 's4' && state.stage !== 's5') {
+      requestAnimationFrame(step);
+    } else {
+      state.progress.frontPercent = Math.max(state.progress.frontPercent, effectiveTarget);
+    }
+  };
+
+  requestAnimationFrame(step);
+}
+
+function startMessageTicker() {
+  if (state.progress.messageId) {
+    clearInterval(state.progress.messageId);
+  }
+  state.progress.tickerIndex = 0;
+  state.progress.messageId = setInterval(() => {
+    if (state.stage !== 's2' && state.stage !== 's3') return;
+    const step = PROGRESS_TICKS[state.progress.tickerIndex % PROGRESS_TICKS.length];
+    const target = step.percent;
+    if (target > state.progress.percent) {
+      updateProgressUI(target, null, step.label);
+    } else if (step.label && els.progressLabelS2) {
+      els.progressLabelS2.textContent = step.label;
+      if (els.progressLabelS3) {
+        els.progressLabelS3.textContent = step.label;
+      }
+    }
+    if (step.eta && els.progressEtaS2) {
+      els.progressEtaS2.textContent = step.eta;
+    }
+    state.progress.tickerIndex += 1;
+  }, 10_000);
+}
+
+function stopProgressTimers() {
+  if (state.progress.timerId) {
+    clearTimeout(state.progress.timerId);
+    state.progress.timerId = null;
+  }
+  if (state.progress.pollId) {
+    clearInterval(state.progress.pollId);
+    state.progress.pollId = null;
+  }
+  if (state.progress.messageId) {
+    clearInterval(state.progress.messageId);
+    state.progress.messageId = null;
+  }
+  if (state.transition.countdownId) {
+    clearInterval(state.transition.countdownId);
+    state.transition.countdownId = null;
+  }
+  if (state.transition.timeoutId) {
+    clearTimeout(state.transition.timeoutId);
+    state.transition.timeoutId = null;
+  }
+}
+
+async function initLiff() {
+  const liffId = config.formLiffId || config.liffId || '';
+  if (!window.liff || !liffId) return;
+
   try {
     await liff.init({ liffId });
     await liff.ready;
-
     if (!liff.isLoggedIn()) {
       liff.login({ scope: ['profile', 'openid'] });
       return;
     }
-
-    liffInClient = liff.isInClient?.() ?? false;
-
-    let profile = null;
-    try {
-      profile = await liff.getProfile();
-    } catch (error) {
-      console.warn('[LIFF] 無法取得使用者檔案：', error);
-    }
-
-    const context = liff.getContext?.();
-    const decoded = liff.getDecodedIDToken?.();
-
-    cachedUserId = profile?.userId || context?.userId || decoded?.sub || '';
-
-    if (!cachedUserId) {
-      console.warn('[LIFF] 尚未取得使用者 ID，將以無推播模式運作');
-    }
-
-    liffReady = true;
+    state.liffReady = true;
+    state.userId = await liff.getProfile().then((profile) => profile?.userId || '')
+      .catch(() => liff.getContext?.()?.userId || '') || '';
   } catch (error) {
-    console.warn('[LIFF] 初始化失敗：', error);
+    console.warn('[LIFF] init failed', error);
   }
 }
 
-const getTrimmed = (value) => (value || '').trim();
-
-function buildPayload(formData) {
-  return {
-    city: getTrimmed(formData.get('city')),
-    route: getTrimmed(formData.get('route')),
-    number: getTrimmed(formData.get('number')),
-    name: getTrimmed(formData.get('name')),
-    submittedAt: new Date().toISOString(),
-  };
-}
-
-function setLoading(isLoading) {
-  if (!submitButton) return;
-  submitButton.disabled = isLoading;
-  submitButton.textContent = isLoading ? '分析中…' : '送出並分析';
-}
-
-function clearReport() {
-  if (reportCard) {
-    reportCard.hidden = true;
-    reportCard.innerHTML = '';
-  }
-}
-
-function createList(items) {
-  const listItems = (items || []).filter(Boolean);
-  if (!listItems.length) return null;
-  const list = document.createElement('ul');
-  list.className = 'report-card__list';
-  listItems.forEach((text) => {
-    const li = document.createElement('li');
-    li.textContent = text;
-    list.appendChild(li);
-  });
-  return list;
-}
-
-function renderReport(report) {
-  clearReport();
-  if (!report) return;
-
-  reportCard.hidden = false;
-
-  const primary = report.primary || {};
-  const competitors = report.competitors || [];
-  const external = report.externalInsights || { status: 'idle', items: [] };
-
-  const mainSection = document.createElement('div');
-  mainSection.className = 'report-card__section';
-  const mainTitle = document.createElement('p');
-  mainTitle.className = 'report-card__title';
-  mainTitle.textContent = '初檢鉤子摘要';
-  mainSection.appendChild(mainTitle);
-
-  const summaryLines = [];
-  if (primary.name) summaryLines.push(`店名：${primary.name}`);
-  if (primary.address) summaryLines.push(`地址：${primary.address}`);
-  if (primary.rating || primary.reviewCount) {
-    const ratingText = primary.rating ? `${primary.rating} 分` : '暫無評分';
-    const reviewText = primary.reviewCount != null ? `${primary.reviewCount} 則評論` : '尚無評論資料';
-    summaryLines.push(`Google 評價：${ratingText}｜${reviewText}`);
-  }
-  if (primary.phone) summaryLines.push(`電話：${primary.phone}`);
-  if (primary.website) summaryLines.push(`網站：${primary.website}`);
-
-  const summaryList = createList(summaryLines);
-  if (summaryList) mainSection.appendChild(summaryList);
-
-  if (primary.reviews && primary.reviews.length) {
-    const review = primary.reviews[0];
-    const reviewParagraph = document.createElement('p');
-    reviewParagraph.className = 'report-card__muted';
-    reviewParagraph.textContent = `最新評論：${review.author}（${review.relativePublishTimeDescription || '近期'}）－${review.originalText || '（無文字）'}`;
-    mainSection.appendChild(reviewParagraph);
-  }
-
-  if (report.generatedAt) {
-    const generated = document.createElement('p');
-    generated.className = 'report-card__muted';
-    generated.textContent = `生成時間：${new Date(report.generatedAt).toLocaleString('zh-TW')}`;
-    mainSection.appendChild(generated);
-  }
-
-  reportCard.appendChild(mainSection);
-
-  if (competitors.length) {
-    const compSection = document.createElement('div');
-    compSection.className = 'report-card__section';
-    const compTitle = document.createElement('p');
-    compTitle.className = 'report-card__title';
-    compTitle.textContent = '同區競品對比';
-    compSection.appendChild(compTitle);
-
-    const compLines = competitors.map((comp) => {
-      const ratingDiff = primary.rating && comp.rating ? (comp.rating - primary.rating).toFixed(1) : null;
-      const diffText = ratingDiff ? (Number(ratingDiff) >= 0 ? `+${ratingDiff}` : ratingDiff) : '';
-      const reviewText = comp.reviewCount != null ? `${comp.reviewCount} 則` : '評論量未知';
-      return `${comp.rank}. ${comp.name} ${diffText ? `(${diffText} 分)` : ''}｜${reviewText}`;
-    });
-
-    const compList = createList(compLines);
-    if (compList) compSection.appendChild(compList);
-    reportCard.appendChild(compSection);
-  }
-
-  const externalSection = document.createElement('div');
-  externalSection.className = 'report-card__section';
-  const externalTitle = document.createElement('p');
-  externalTitle.className = 'report-card__title';
-  externalTitle.textContent = '外部口碑聲量';
-  externalSection.appendChild(externalTitle);
-
-  if (external.status === 'ready' && external.items.length) {
-    const extLines = external.items.map((item) => {
-      const source = item.source ? `（${item.source}）` : '';
-      const snippet = item.snippet ? ` - ${item.snippet}` : '';
-      return `${item.title || '未命名消息'}${source}${snippet}`;
-    });
-    const extList = createList(extLines);
-    if (extList) externalSection.appendChild(extList);
-  } else {
-    const info = document.createElement('p');
-    info.className = 'report-card__muted';
-    if (external.status === 'error') {
-      info.textContent = `抓取外部口碑時發生錯誤：${external.message || '請稍後再試'}`;
-    } else if (external.status === 'empty') {
-      info.textContent = '暫無外部口碑資料。';
-    } else {
-      info.textContent = '尚未啟用外部口碑抓取。';
-    }
-    externalSection.appendChild(info);
-  }
-
-  reportCard.appendChild(externalSection);
-
-  const cta = document.createElement('p');
-  cta.className = 'report-card__tagline';
-  cta.textContent = '下一步：授權 Google 帳號，即可生成 60 天深度診斷與升星方案。';
-  reportCard.appendChild(cta);
-}
-
-function buildHookLine(report) {
-  const primary = report?.primary || {};
-  const topCompetitor = (report?.competitors || [])[0];
-
-  if (primary.rating && topCompetitor?.rating) {
-    const diff = Number((topCompetitor.rating - primary.rating).toFixed(1));
-    if (Math.abs(diff) >= 0.2) {
-      return `同區競品「${topCompetitor.name}」評分${diff > 0 ? '高' : '低'} ${Math.abs(diff)} 分，建議立即提出改善計畫。`;
-    }
-  }
-
-  if (primary.reviewCount != null && primary.reviewCount < 20) {
-    return `目前僅有 ${primary.reviewCount} 則評論，拉開差距的關鍵在於加速累積好評與即時回覆。`;
-  }
-
-  return '初檢鉤子已生成，以下是你與商圈競品的差距摘要。';
-}
-
-function updateWebhookStatus({ attempted, success }) {
-  if (!statusLine || !statusBadge) return;
-  if (!attempted) {
-    statusLine.hidden = true;
-    statusBadge.textContent = '';
-    statusBadge.classList.remove('status-badge--warn');
-    return;
-  }
-  statusLine.hidden = false;
-  const message = success
-    ? 'LINE 已同步推播鉤子報告'
-    : 'LINE 推播未確認，建議手動回貼結果';
-  statusBadge.textContent = message;
-  statusBadge.classList.toggle('status-badge--warn', !success);
-}
-
-function showResult({ payload, message, report, webhookSuccess, webhookAttempted }) {
-  resultSection.hidden = false;
-  resultMessage.textContent = report ? `${message} ${buildHookLine(report)}` : message;
-  updateWebhookStatus({ attempted: webhookAttempted, success: webhookSuccess });
-  renderReport(report || null);
-
-  resultJson.textContent = JSON.stringify(
-    {
-      payload,
-      webhookSuccess,
-      report,
-    },
-    null,
-    2
-  );
-}
-
-async function postToN8n(payload, userId) {
-  if (!userId) return false;
-  try {
-    const body = {
-      destination: userId,
-      events: [
-        {
-          type: 'message',
-          message: {
-            type: 'text',
-            text: JSON.stringify({ action: 'form_submit', ...payload }),
-          },
-          timestamp: Date.now(),
-          source: { type: 'user', userId },
-          replyToken: '',
-          mode: 'active',
-        },
-      ],
-    };
-
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      mode: 'cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      console.warn('[n8n] webhook 回應非 2xx', response.status, await response.text());
-      return false;
-    }
-    return true;
-  } catch (error) {
-    console.error('[n8n] webhook 呼叫失敗', error);
-    return false;
-  }
-}
-
-async function fetchJson(url, options) {
-  const response = await fetch(url, options);
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`HTTP ${response.status}：${text}`);
-  }
-  return response.json();
-}
-
-function buildPlacesQuery(payload) {
-  return [payload.name, payload.city, payload.route, payload.number].filter(Boolean).join(' ');
-}
-
-async function searchPlaces(payload) {
-  if (!googleApiKey) {
-    throw new Error('尚未設定 Google Places API Key');
-  }
-
-  const query = buildPlacesQuery(payload);
-  if (!query) {
-    throw new Error('表單資料不完整，請確認四個欄位皆已填寫。');
-  }
-
-  const data = await fetchJson('https://places.googleapis.com/v1/places:searchText', {
-    method: 'POST',
+async function requestJSON(url, options = {}) {
+  const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
-      'X-Goog-Api-Key': googleApiKey,
-      'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.primaryTypeDisplayName,places.rating,places.userRatingCount,places.internationalPhoneNumber,places.websiteUri',
+      ...(options.headers || {}),
     },
-    body: JSON.stringify({
-      textQuery: query,
-      languageCode: 'zh-TW',
-      regionCode: 'TW',
-      maxResultCount: 5,
-    }),
+    ...options,
   });
 
-  const places = Array.isArray(data?.places) ? data.places : [];
-  if (!places.length) {
-    throw new Error('找不到符合的 Google 商家，請確認地址是否正確。');
-  }
-  return places;
-}
+  const contentType = response.headers.get('content-type') || '';
+  const text = await response.text();
 
-async function fetchPlaceDetails(placeId) {
-  const detailUrl = new URL(`https://places.googleapis.com/v1/${placeId}`);
-  detailUrl.searchParams.set('languageCode', 'zh-TW');
-  detailUrl.searchParams.set('regionCode', 'TW');
-  try {
-    return await fetchJson(detailUrl.toString(), {
-      headers: {
-        'X-Goog-Api-Key': googleApiKey,
-        'X-Goog-FieldMask': 'displayName,formattedAddress,primaryTypeDisplayName,internationalPhoneNumber,regularOpeningHours,websiteUri,rating,userRatingCount,reviews',
-      },
-    });
-  } catch (error) {
-    console.warn('[places] 取得詳細資料失敗，改用搜尋結果', error.message);
-    return null;
+  if (!response.ok) {
+    throw new Error(text || response.statusText);
   }
-}
 
-function mapReview(review) {
-  return {
-    author: review?.authorAttribution?.displayName || '匿名',
-    rating: review?.rating || null,
-    relativePublishTimeDescription: review?.relativePublishTimeDescription || '',
-    originalText: review?.originalText?.text || review?.text?.text || '',
-  };
-}
-
-function normalizeCompetitors(primary, competitors) {
-  return competitors.map((item, index) => ({
-    rank: index + 1,
-    id: item.id,
-    name: item.displayName?.text || '未命名商家',
-    address: item.formattedAddress || '',
-    rating: item.rating || null,
-    reviewCount: item.userRatingCount || null,
-    primaryType: item.primaryTypeDisplayName?.text || '',
-  })).filter((item) => item.id !== primary.id);
-}
-
-async function fetchExternalInsights(name, city) {
-  if (!scraperApiKey) {
-    return { status: 'disabled', items: [] };
-  }
-  const query = [name, city].filter(Boolean).join(' ');
-  if (!query) {
-    return { status: 'empty', items: [] };
-  }
-  try {
-    const url = new URL('https://api.scraperapi.com/structured/google/search');
-    url.searchParams.set('api_key', scraperApiKey);
-    url.searchParams.set('q', query);
-    url.searchParams.set('num', '5');
-    url.searchParams.set('hl', 'zh-tw');
-    const data = await fetchJson(url.toString());
-    const items = Array.isArray(data?.organic_results)
-      ? data.organic_results.slice(0, 3).map((item) => ({
-          title: item.title || '',
-          snippet: item.snippet || '',
-          link: item.link || '',
-          source: item.source || '',
-        }))
-      : [];
-    if (!items.length) {
-      return { status: 'empty', items: [] };
+  if (contentType.includes('application/json')) {
+    try {
+      return text ? JSON.parse(text) : {};
+    } catch (error) {
+      throw new Error('回應格式錯誤');
     }
-    return { status: 'ready', items };
-  } catch (error) {
-    console.warn('[scraper] 抓取失敗', error.message);
-    return { status: 'error', message: error.message, items: [] };
   }
+
+  // 部分 Webhook 以純文字 ok 回應
+  const trimmed = (text || '').trim().toLowerCase();
+  if (!trimmed || trimmed === 'ok') {
+    return { ok: true };
+  }
+
+  return { ok: true, message: text };
 }
 
-async function generateDiagnosis(payload) {
-  const places = await searchPlaces(payload);
-  const primary = places[0];
-  const detail = (await fetchPlaceDetails(primary.id)) || {};
-
-  const reviewItems = Array.isArray(detail.reviews)
-    ? detail.reviews.slice(0, 5).map(mapReview)
-    : [];
-
-  const summary = {
-    id: primary.id,
-    name: detail.displayName?.text || primary.displayName?.text || payload.name,
-    address: detail.formattedAddress || primary.formattedAddress || buildPlacesQuery(payload),
-    primaryType: detail.primaryTypeDisplayName?.text || primary.primaryTypeDisplayName?.text || '',
-    rating: detail.rating || primary.rating || null,
-    reviewCount: detail.userRatingCount || primary.userRatingCount || null,
-    phone: detail.internationalPhoneNumber || primary.internationalPhoneNumber || '',
-    website: detail.websiteUri || primary.websiteUri || '',
-    reviews: reviewItems,
-  };
-
-  const competitors = normalizeCompetitors(summary, places.slice(1, 4));
-  const externalInsights = await fetchExternalInsights(summary.name, payload.city);
-
-  return {
-    generatedAt: new Date().toISOString(),
-    primary: summary,
-    competitors,
-    externalInsights,
-    sourceQuery: buildPlacesQuery(payload),
-  };
-}
-
-copyButton.addEventListener('click', async () => {
-  try {
-    await navigator.clipboard.writeText(resultJson.textContent);
-    copyButton.textContent = '已複製';
-    setTimeout(() => (copyButton.textContent = '複製資料'), 2000);
-  } catch (error) {
-    console.warn('複製失敗：', error);
-  }
-});
-
-form.addEventListener('submit', async (event) => {
+async function handleLeadSubmit(event) {
   event.preventDefault();
-  const formData = new FormData(form);
-  const payload = buildPayload(formData);
+  if (!els.leadForm?.reportValidity?.()) return;
 
-  if (!payload.city || !payload.route || !payload.number || !payload.name) {
-    showResult({
-      payload,
-      message: '請確認四個欄位都已填寫完整，再試一次。',
-      report: null,
-      webhookSuccess: false,
-      webhookAttempted: false,
-    });
+  const formData = new FormData(els.leadForm);
+  const placeInput = {
+    city: (formData.get('city') || '').trim(),
+    route: (formData.get('route') || '').trim(),
+    number: (formData.get('number') || '').trim(),
+    name: (formData.get('name') || '').trim(),
+  };
+
+  if (!placeInput.city || !placeInput.route || !placeInput.number || !placeInput.name) {
+    showToast('請完整填寫四個欄位');
     return;
   }
 
-  setLoading(true);
-  clearReport();
-  resultMessage.textContent = '正在分析，請稍候…';
-  resultSection.hidden = false;
-  resultJson.textContent = JSON.stringify({ payload }, null, 2);
-  updateWebhookStatus({ attempted: false, success: false });
+  els.submitBtn.disabled = true;
+  els.submitBtn.textContent = '送出中…';
 
-  const webhookPromise = liffReady && cachedUserId ? postToN8n(payload, cachedUserId) : Promise.resolve(false);
-  const diagnosisPromise = generateDiagnosis(payload);
-
-  const [webhookResult, diagnosisResult] = await Promise.allSettled([webhookPromise, diagnosisPromise]);
-
-  const webhookSuccess = webhookResult.status === 'fulfilled' ? webhookResult.value : false;
-  const webhookAttempted = liffReady && Boolean(cachedUserId);
-  const diagnosis = diagnosisResult.status === 'fulfilled' ? diagnosisResult.value : null;
-  const diagnosisError = diagnosisResult.status === 'rejected' ? diagnosisResult.reason : null;
-
-  if (diagnosisError) {
-    showResult({
-      payload,
-      message: `鉤子報告生成失敗：${diagnosisError.message || diagnosisError}`,
-      report: null,
-      webhookSuccess,
-      webhookAttempted,
+  try {
+    const leadId = generateLeadId();
+    const payload = {
+      lead_id: leadId,
+      source: 'liff-web',
+      line_user_id: state.userId || '',
+      submitted_at: new Date().toISOString(),
+      quiz: {
+        goal: 'instant_lowstar',
+        tone: [],
+        competitors_input: [],
+        competitors_auto: [],
+      },
+      place: {
+        city: placeInput.city,
+        road: placeInput.route,
+        addr_no: placeInput.number,
+        name: placeInput.name,
+      },
+    };
+    const result = await requestJSON(endpoints.lead, {
+      method: 'POST',
+      body: JSON.stringify(payload),
     });
-  } else {
-    let baseMessage;
-    if (webhookSuccess) {
-      baseMessage = '資料已送出，我們會在 LINE 視窗推播鉤子報告，此視窗可關閉。';
-    } else if (webhookAttempted) {
-      baseMessage = '已生成鉤子報告，但目前無法確認 LINE 推播，建議手動複製回貼。';
-    } else if (liffReady) {
-      baseMessage = '已生成鉤子報告；目前無法取得 LINE 使用者 ID，請複製下列內容貼回 LINE 或重新授權 LIFF。';
-    } else {
-      baseMessage = '已生成鉤子報告，下方提供完整摘要與原始資料。';
+    state.leadId = result.lead_id || payload.lead_id;
+    state.leadPayload = payload.place;
+    state.quiz = { goal: '', tone: [], competitorsInput: [], skipped: false };
+    state.progress.startAt = Date.now();
+    state.progress.frontPercent = 0;
+    state.progress.timeoutFired = false;
+    state.progress.tickerIndex = 0;
+    state.progress.ninetyReachedAt = 0;
+    state.progress.lastStage = 'collecting';
+    animateFrontProgress(PROGRESS_FAKE_LIMIT);
+    startMessageTicker();
+    setStage('s1');
+    startTransitionToQuiz();
+  } catch (error) {
+    console.error(error);
+    showToast(`送出失敗：${error.message}`);
+    els.submitBtn.disabled = false;
+    els.submitBtn.textContent = '開始 30 秒初檢';
+  }
+}
+
+function startTransitionToQuiz() {
+  if (state.transition.countdownId) {
+    clearInterval(state.transition.countdownId);
+    state.transition.countdownId = null;
+  }
+  if (state.transition.timeoutId) {
+    clearTimeout(state.transition.timeoutId);
+    state.transition.timeoutId = null;
+  }
+
+  if (els.transitionBar) {
+    els.transitionBar.style.transition = 'none';
+    els.transitionBar.style.width = '0%';
+    requestAnimationFrame(() => {
+      els.transitionBar.style.transition = 'width 3s ease';
+      els.transitionBar.style.width = '100%';
+    });
+  }
+
+  if (els.transitionCounter) {
+    let remaining = 3;
+    els.transitionCounter.textContent = remaining;
+    state.transition.countdownId = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(state.transition.countdownId);
+        state.transition.countdownId = null;
+        els.transitionCounter.textContent = '0';
+      } else {
+        els.transitionCounter.textContent = remaining;
+      }
+    }, 1000);
+  }
+
+  state.transition.timeoutId = setTimeout(() => {
+    setStage('s2');
+    els.submitBtn.disabled = false;
+    els.submitBtn.textContent = '開始 30 秒初檢';
+    updateProgressUI(PROGRESS_FAKE_LIMIT, null, PROGRESS_TICKS[0].label);
+    if (els.progressEtaS2) {
+      els.progressEtaS2.textContent = PROGRESS_TICKS[0].eta;
     }
+    startPolling();
+  }, TRANSITION_DURATION_MS);
+}
 
-    showResult({
-      payload,
-      message: baseMessage,
-      report: diagnosis,
-      webhookSuccess,
-      webhookAttempted,
+function collectQuizValues() {
+  const form = els.quizForm;
+  if (!form) return null;
+
+  const formData = new FormData(form);
+  const goal = formData.get('quiz-goal');
+  const tone = formData.getAll('quiz-tone');
+  const competitorsRaw = (formData.get('quiz-competitors') || '')
+    .split(/\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+
+  return { goal, tone, competitorsInput: competitorsRaw };
+}
+
+function validateQuiz(values) {
+  if (!values.goal) {
+    return '請選擇您最想先解決的目標。';
+  }
+  if (values.tone.length === 0) {
+    return '請至少選擇一個回覆語氣，或使用「稍後再答」。';
+  }
+  if (values.tone.length > MAX_TONE_SELECTION) {
+    return '回覆語氣最多選擇 2 項。';
+  }
+  return '';
+}
+
+async function handleQuizSubmit(event) {
+  event.preventDefault();
+  const values = collectQuizValues();
+  if (!values) return;
+  const error = validateQuiz(values);
+  if (error) {
+    els.quizError.textContent = error;
+    els.quizError.hidden = false;
+    return;
+  }
+  els.quizError.hidden = true;
+  await submitQuiz(values);
+}
+
+async function handleQuizSkip() {
+  const fallback = {
+    goal: state.quiz.goal || 'instant_lowstar',
+    tone: ['direct_fix', 'soothing'],
+    competitorsInput: [],
+  };
+  await submitQuiz(fallback, true);
+}
+
+async function submitQuiz(values, skipped = false) {
+  if (!state.leadId) {
+    showToast('尚未建立 Lead，請重新填寫。');
+    resetFlow();
+    return;
+  }
+
+  state.quiz = { ...values, skipped };
+  els.quizSubmit.disabled = true;
+  els.quizSkip.disabled = true;
+  els.quizSubmit.textContent = skipped ? '使用預設語氣…' : '送出設定…';
+
+  try {
+    await requestJSON(endpoints.quiz, {
+      method: 'POST',
+      body: JSON.stringify({
+        lead_id: state.leadId,
+        quiz: {
+          goal: values.goal,
+          tone: values.tone,
+          competitors_input: values.competitorsInput,
+          skipped,
+        },
+        intent: 'quiz',
+      }),
     });
+
+    updateSummary(values, skipped);
+    setStage('s3');
+    animateFrontProgress(Math.max(30, state.progress.frontPercent));
+  } catch (error) {
+    console.error(error);
+    showToast(`儲存設定失敗：${error.message}`);
+  } finally {
+    els.quizSubmit.disabled = false;
+    els.quizSkip.disabled = false;
+    els.quizSubmit.textContent = '完成設定';
+  }
+}
+
+function updateSummary(values, skipped) {
+  const goalMap = {
+    instant_lowstar: '立即掌握 1–3★ 低星',
+    save_time: '省時，一鍵回覆草稿',
+    beat_competitors: '看我與附近對手差距',
+    weekly_focus: '幫我列出本週三件事',
+  };
+  const toneMap = {
+    soothing: '溫和安撫',
+    direct_fix: '直接解決',
+    authority: '專業權威',
+    apology: '道歉＋補救',
+  };
+
+  els.summaryGoal.textContent = goalMap[values.goal] || values.goal || '—';
+  els.summaryTone.textContent = values.tone.length
+    ? values.tone.map((key) => toneMap[key] || key).join('、')
+    : '預設：直接解決＋溫和安撫';
+  els.summaryCompetitors.textContent = values.competitorsInput.length
+    ? values.competitorsInput.join('、')
+    : skipped ? '系統自動挑選中…（預設）' : '系統自動挑選中…';
+}
+
+function acknowledgeSummary() {
+  showToast('設定已鎖定，稍待即可收到完整報告。', 2000);
+  // Prevent double submission
+  els.summaryConfirm.disabled = true;
+  els.summaryConfirm.textContent = '已確認';
+}
+
+function startPolling() {
+  if (!state.leadId || !endpoints.analysisStatus) return;
+  if (state.progress.pollId) {
+    clearInterval(state.progress.pollId);
+  }
+  state.progress.ninetyReachedAt = 0;
+  state.progress.lastStage = '';
+  state.progress.timeoutFired = false;
+  const poll = async () => {
+    try {
+      const url = new URL(endpoints.analysisStatus);
+      url.searchParams.set('lead_id', state.leadId);
+      const result = await requestJSON(url.toString(), { method: 'GET' });
+      handleStatusResponse(result);
+    } catch (error) {
+      console.warn('[analysis-status]', error.message);
+    }
+  };
+  poll();
+  state.progress.pollId = setInterval(poll, POLL_INTERVAL_MS);
+
+  if (state.progress.timerId) {
+    clearTimeout(state.progress.timerId);
+  }
+  state.progress.timerId = setTimeout(() => {
+    if (state.stage !== 's4' && !state.progress.timeoutFired) {
+      triggerTimeout();
+    }
+  }, PROGRESS_TIMEOUT_MS);
+}
+
+function handleStatusResponse(payload) {
+  if (!payload || typeof payload !== 'object') return;
+  if (!state.leadId || payload.lead_id !== state.leadId) return;
+
+  const stage = (payload.stage || '').toLowerCase();
+  const percent = typeof payload.percent === 'number' ? payload.percent : state.progress.percent;
+  const etaSeconds = typeof payload.eta_seconds === 'number' ? payload.eta_seconds : null;
+  const stageHints = {
+    collecting: '正在定位您的門市與商圈…',
+    processing: '正在抓取 DataForSEO 與附近競品…',
+    analyzing: '正在生成差距雷達與回覆草稿…',
+    scheduled: '資料量較大，已排程推送完成結果',
+    timeout: '資料量較大，已排程推送完成結果',
+    ready: '分析完成！正在回傳結果…',
+  };
+
+  if (stage === 'collecting' && state.stage === 's1') {
+    setStage('s2');
   }
 
-  if (webhookSuccess && liffReady && liffInClient && liff.closeWindow) {
-    setTimeout(() => liff.closeWindow(), 1800);
+  if (typeof percent === 'number') {
+    const mergedPercent = Math.max(state.progress.frontPercent, percent);
+    updateProgressUI(mergedPercent, etaSeconds, stageHints[stage]);
+    state.progress.frontPercent = Math.max(state.progress.frontPercent, mergedPercent);
   }
 
-  setLoading(false);
-});
+  if (payload.report) {
+    state.report = payload.report;
+  }
 
-initLiff();
+  state.progress.lastStage = stage;
+
+  if (stage === 'processing' && state.progress.frontPercent < 55) {
+    animateFrontProgress(55, 2000);
+  }
+
+  if (stage === 'analyzing' && state.progress.frontPercent < 85) {
+    animateFrontProgress(85, 2000);
+  }
+
+  if (stage === 'ready') {
+    stopProgressTimers();
+    updateProgressUI(100, 0, stageHints.ready);
+    renderAnalysisReport();
+  } else if (stage === 'scheduled' || stage === 'timeout') {
+    triggerTimeout();
+  } else if (stage === 'failed') {
+    showToast('分析失敗，請稍後再試或聯絡支援。');
+    triggerTimeout();
+  }
+}
+
+function buildListItems(target, items = [], formatter) {
+  if (!target) return;
+  target.innerHTML = '';
+  if (!items.length) {
+    const li = document.createElement('li');
+    li.textContent = '資料準備中，稍後自動更新。';
+    li.className = 'muted';
+    target.appendChild(li);
+    return;
+  }
+  items.forEach((item) => {
+    const li = document.createElement('li');
+    li.textContent = formatter ? formatter(item) : String(item);
+    target.appendChild(li);
+  });
+}
+
+function renderAnalysisReport() {
+  if (!state.report) {
+    showToast('尚未取得報告內容，請稍後再試。');
+    return;
+  }
+
+  const {
+    goal_label: goalLabel,
+    tone_label: toneLabel,
+    competitors_auto: competitorsAuto = [],
+    competitors_selected: competitorsSelected = [],
+    weekly_actions: weeklyActions = [],
+    reply_drafts: replyDrafts = [],
+  } = state.report;
+
+  const combinedCompetitors = competitorsSelected.concat(competitorsAuto);
+  buildListItems(els.resultRadarList, combinedCompetitors.slice(0, 5), (item) => {
+    const name = item.name || '未命名店家';
+    const rating = typeof item.rating === 'number' ? `${item.rating.toFixed(1)} ★` : '— ★';
+    const reviews = item.reviews_total != null ? `${item.reviews_total} 則` : '評論數不足';
+    const distance = item.distance_m != null ? `${Math.round(item.distance_m)} 公尺` : '距離未知';
+    return `${name}｜${rating}｜${reviews}｜${distance}`;
+  });
+
+  buildListItems(els.resultActionsList, weeklyActions.slice(0, 3));
+
+  if (els.resultDraftsList) {
+    els.resultDraftsList.innerHTML = '';
+    if (!replyDrafts.length) {
+      const empty = document.createElement('p');
+      empty.className = 'muted';
+      empty.textContent = '草稿準備中，稍後會自動推送至 LINE。';
+      els.resultDraftsList.appendChild(empty);
+    } else {
+      replyDrafts.slice(0, 3).forEach((draft, index) => {
+        const card = document.createElement('div');
+        card.className = 'draft-item';
+        const title = document.createElement('strong');
+        title.textContent = `草稿 #${index + 1}`;
+        const body = document.createElement('p');
+        body.textContent = draft.text || draft;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn--ghost';
+        btn.textContent = '複製草稿';
+        btn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(draft.text || draft);
+            showToast('已複製草稿', 1800);
+          } catch (error) {
+            showToast('複製失敗，請手動複製');
+          }
+        });
+        card.append(title, body, btn);
+        els.resultDraftsList.appendChild(card);
+      });
+    }
+  }
+
+  if (els.copyActions) {
+    els.copyActions.onclick = async () => {
+      const content = weeklyActions.join('\n• ');
+      if (!content) {
+        showToast('尚無可複製的任務');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(`• ${content}`);
+        showToast('已複製本週三件事', 1800);
+      } catch (error) {
+        showToast('複製失敗，請手動複製');
+      }
+    };
+  }
+
+  if (els.summaryGoal) {
+    els.summaryGoal.textContent = goalLabel || els.summaryGoal.textContent;
+  }
+  if (els.summaryTone) {
+    els.summaryTone.textContent = toneLabel || els.summaryTone.textContent;
+  }
+
+  if (els.ctaTrial) {
+    els.ctaTrial.href = trialUrl;
+  }
+  if (els.ctaPlan) {
+    els.ctaPlan.href = planUrl || '#';
+  }
+
+  setStage('s4');
+}
+
+function triggerTimeout() {
+  if (state.progress.timeoutFired) return;
+  state.progress.timeoutFired = true;
+  stopProgressTimers();
+  updateProgressUI(Math.max(state.progress.percent || 90, 90), null, '資料量較大，已排程推送完成結果');
+  setStage('s5');
+}
+
+async function handleWeeklyDraft() {
+  if (!endpoints.weeklyDraft) {
+    showToast('尚未設定試算服務');
+    return;
+  }
+  if (!state.leadId) {
+    showToast('尚未取得 Lead 編號');
+    return;
+  }
+  try {
+    await requestJSON(endpoints.weeklyDraft, {
+      method: 'POST',
+      body: JSON.stringify({
+        lead_id: state.leadId,
+        mode: 'trial',
+        tone: state.quiz.tone.length ? state.quiz.tone : ['direct_fix', 'soothing'],
+        goal: state.quiz.goal || 'instant_lowstar',
+      }),
+    });
+    showToast('已推送試算三件事，請查看 LINE。');
+  } catch (error) {
+    showToast(`推送失敗：${error.message}`);
+  }
+}
+
+function resetFlow() {
+  stopProgressTimers();
+  state.stage = 's0';
+  state.leadId = '';
+  state.leadPayload = null;
+  state.quiz = { goal: '', tone: [], competitorsInput: [], skipped: false };
+  state.progress = {
+    startAt: 0,
+    percent: 0,
+    frontPercent: 0,
+    tickerIndex: 0,
+    timerId: null,
+    pollId: null,
+    messageId: null,
+    timeoutFired: false,
+    ninetyReachedAt: 0,
+    lastStage: '',
+  };
+  state.report = null;
+
+  if (els.leadForm) {
+    els.leadForm.reset();
+  }
+  if (els.quizForm) {
+    els.quizForm.reset();
+    els.quizError.hidden = true;
+  }
+  if (els.summaryConfirm) {
+    els.summaryConfirm.disabled = false;
+    els.summaryConfirm.textContent = '保持這樣，很好';
+  }
+  updateProgressUI(0);
+  setStage('s0');
+}
+
+function redirectToReport() {
+  if (!state.report || !reportUrl) return;
+  const token = state.report.token || '';
+  const target = token
+    ? `${reportUrl}${reportUrl.includes('?') ? '&' : '?'}token=${encodeURIComponent(token)}`
+    : reportUrl;
+  window.location.href = target;
+}
+
+function attachEventListeners() {
+  els.leadForm?.addEventListener('submit', handleLeadSubmit);
+  els.quizForm?.addEventListener('submit', handleQuizSubmit);
+  els.quizSkip?.addEventListener('click', handleQuizSkip);
+  els.summaryConfirm?.addEventListener('click', acknowledgeSummary);
+  els.returnHome?.addEventListener('click', resetFlow);
+  els.timeoutBack?.addEventListener('click', resetFlow);
+  els.timeoutWeekly?.addEventListener('click', handleWeeklyDraft);
+  els.copyActions?.addEventListener('click', (event) => {
+    event.preventDefault();
+  });
+  els.aboutLink?.addEventListener('click', (event) => {
+    event.preventDefault();
+    openAboutPage();
+  });
+}
+
+(function bootstrap() {
+  const viewMode = params.get('view');
+  if (state.mode === 'report') {
+    redirectToReport();
+    return;
+  }
+
+  if (viewMode === 'about') {
+    window.location.replace('about.html');
+    return;
+  }
+
+  if (els.timeoutSample && sampleReportUrl) {
+    els.timeoutSample.href = sampleReportUrl;
+  }
+  if (els.ctaTrial && trialUrl) {
+    els.ctaTrial.href = trialUrl;
+  }
+  if (els.ctaPlan && planUrl) {
+    els.ctaPlan.href = planUrl;
+  }
+  if (els.aboutLink) {
+    els.aboutLink.href = 'about.html';
+  }
+
+  attachEventListeners();
+  resetFlow();
+  initLiff();
+})();

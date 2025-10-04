@@ -3,88 +3,252 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>星級引擎｜30 秒免費測驗</title>
+  <title>星級引擎｜30 秒智能初檢</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main class="page">
-    <section class="card">
-      <header class="card__header">
-        <img class="card__logo" src="logo.png" alt="星級引擎 Logo" width="72" height="72" />
-        <div>
-          <h1>星級引擎智能體</h1>
-          <p>30 秒內評估你與同區競品的差距，準備好開始了嗎？</p>
-        </div>
-      </header>
+  <header class="app-header">
+    <div class="app-header__brand">
+      <span class="app-header__brand-logo"><img src="logo.png" alt="星級引擎" width="24" height="24" /></span>
+      <span class="app-header__title">星級引擎｜脈動智匯</span>
+    </div>
+  </header>
 
-      <form id="lead-form" class="form" autocomplete="off">
-        <div class="form__field">
-          <label for="city">城市</label>
-          <input id="city" name="city" type="text" placeholder="例如：台北市" required />
-        </div>
-        <div class="form__field">
-          <label for="route">路段</label>
-          <input id="route" name="route" type="text" placeholder="例如：信義路四段" required />
-        </div>
-        <div class="form__field">
-          <label for="number">門牌</label>
-          <input id="number" name="number" type="text" placeholder="例如：99號" required />
-        </div>
-        <div class="form__field">
-          <label for="name">店名</label>
-          <input id="name" name="name" type="text" placeholder="例如：星級咖啡館" required />
-        </div>
+  <main class="page" id="app">
+    <!-- S0｜四格輸入 -->
+    <section id="stage-s0" class="stage stage--active" data-stage="s0">
+      <div class="stage-panel stage-panel--form">
+        <header class="stage-panel__header">
+          <span class="stage-tag">30 秒智能初檢</span>
+          <h1>輸入四格資訊，30 秒產出 AI 初檢與品牌小站</h1>
+          <p>填上城市、路段、門牌與店名，星級引擎會即時掃描近 7 天評論、競品差距，並為你預備專屬樣本報表與品牌小站預覽。</p>
+        </header>
 
-        <button type="submit" class="form__submit">送出並分析</button>
-      </form>
+        <form id="lead-form" class="stage-form" autocomplete="off">
+          <div class="form-grid">
+            <label class="form-field">
+              <span class="form-label">城市</span>
+              <input id="city" name="city" type="text" placeholder="例如：台北市" required />
+            </label>
+            <label class="form-field">
+              <span class="form-label">路段</span>
+              <input id="route" name="route" type="text" placeholder="例如：信義路四段" required />
+            </label>
+            <label class="form-field">
+              <span class="form-label">門牌</span>
+              <input id="number" name="number" type="text" placeholder="例如：99 號" required />
+            </label>
+            <label class="form-field">
+              <span class="form-label">店名</span>
+              <input id="name" name="name" type="text" placeholder="例如：星級咖啡館" required />
+            </label>
+          </div>
 
-      <footer class="card__footer">
-        <p>送出後，星級引擎智能體會立即回傳初步診斷。若你尚未登入 LINE LIFF，會先引導你登入。</p>
-      </footer>
+          <button id="submit-btn" type="submit" class="btn btn--primary btn--lg">啟動 AI 初檢</button>
+        </form>
+      </div>
     </section>
 
-    <section id="result" class="result" hidden>
-      <h2>已送出！</h2>
-      <p id="result-message">資料已傳送給星級引擎。</p>
-      <div id="status-line" class="result__status" hidden>
-        <span id="webhook-status" class="status-badge"></span>
+    <!-- S1｜三秒轉場 -->
+    <section id="stage-s1" class="stage" data-stage="s1" hidden>
+      <div class="stage-panel stage-panel--transition">
+        <div class="transition-visual">
+          <div class="transition-bar" id="transition-bar"></div>
+        </div>
+        <div class="transition-copy">
+          <h2>已收到！正在定位您的店家與商圈…</h2>
+          <p class="muted">我們正向 Google Maps 收集最新資料，稍後會自動生成您的專屬設定。</p>
+          <div class="transition-meta">
+            <span id="transition-counter">3</span>
+            <small>秒後帶您進入專屬調校</small>
+          </div>
+        </div>
       </div>
-      <div id="report-card" class="report-card" hidden></div>
-      <pre id="result-json"></pre>
-      <button id="copy-button" class="result__copy">複製資料</button>
     </section>
-  </main>
 
-  <footer class="site-footer">
-    <div class="footer-content">
-      <div class="footer-section">
-        <h3>關於星級引擎</h3>
-        <p>AI 智能評論管理平台<br>讓每一則評論都成為成長動力</p>
+    <!-- S2｜問答設定 -->
+    <section id="stage-s2" class="stage" data-stage="s2" hidden>
+      <div class="stage-panel stage-panel--quiz">
+        <header class="stage-panel__header">
+          <span class="stage-tag">請調適您的專屬引擎</span>
+          <h2>先幫您客製化風格（約 60 秒）</h2>
+          <p class="muted">同時我們正在抓取評論與競品資料，完成後會自動帶入結果。</p>
+        </header>
+
+        <form id="quiz-form" class="quiz-form">
+          <fieldset class="quiz-group">
+            <legend>Q1. 您最想先解決哪一件事？</legend>
+            <label class="option option--radio">
+              <input type="radio" name="quiz-goal" value="instant_lowstar" required />
+              <span class="option__label">立即掌握 1–3★ 低星</span>
+            </label>
+            <label class="option option--radio">
+              <input type="radio" name="quiz-goal" value="save_time" />
+              <span class="option__label">省時，一鍵回覆草稿</span>
+            </label>
+            <label class="option option--radio">
+              <input type="radio" name="quiz-goal" value="beat_competitors" />
+              <span class="option__label">看我與附近對手差距</span>
+            </label>
+            <label class="option option--radio">
+              <input type="radio" name="quiz-goal" value="weekly_focus" />
+              <span class="option__label">幫我列出本週三件事</span>
+            </label>
+          </fieldset>
+
+          <fieldset class="quiz-group">
+            <legend>Q2. 希望回覆語氣？（可複選 1–2 項）</legend>
+            <div class="quiz-columns">
+              <label class="option option--checkbox">
+                <input type="checkbox" name="quiz-tone" value="soothing" />
+                <span class="option__label">溫和安撫</span>
+              </label>
+              <label class="option option--checkbox">
+                <input type="checkbox" name="quiz-tone" value="direct_fix" />
+                <span class="option__label">直接解決</span>
+              </label>
+              <label class="option option--checkbox">
+                <input type="checkbox" name="quiz-tone" value="authority" />
+                <span class="option__label">專業權威</span>
+              </label>
+              <label class="option option--checkbox">
+                <input type="checkbox" name="quiz-tone" value="apology" />
+                <span class="option__label">道歉＋補救</span>
+              </label>
+            </div>
+            <p class="helper-text">若不確定，可稍後再答，系統預設「直接解決＋溫和安撫」。</p>
+          </fieldset>
+
+          <fieldset class="quiz-group">
+            <legend>Q3. 想關注的競品（可略過）</legend>
+            <textarea id="quiz-competitors" name="quiz-competitors" rows="3" placeholder="輸入店名或地址；用逗號 / 換行分隔，例如：鼎好鍋物, 阿蘭餃子館"></textarea>
+            <p class="helper-text">若留空，系統會依據資料自動挑選 5 家同商圈競品。</p>
+          </fieldset>
+
+          <div class="quiz-actions">
+            <div class="quiz-buttons">
+              <button id="quiz-submit" type="submit" class="btn btn--primary">完成設定</button>
+              <button id="quiz-skip" type="button" class="btn btn--ghost">稍後再答</button>
+            </div>
+            <p id="quiz-error" class="error-text" hidden></p>
+          </div>
+        </form>
       </div>
-      <div class="footer-section">
-        <h3>服務條款</h3>
-        <ul>
-          <li><a href="terms.html">服務條款</a></li>
-          <li><a href="privacy.html">隱私權政策</a></li>
-          <li><a href="refund.html">退款政策</a></li>
-        </ul>
+
+      <div class="progress-dock">
+        <div class="progress-dock__bar">
+          <div id="progress-bar" class="progress-dock__fill" style="width: 0%;"></div>
+        </div>
+        <div class="progress-dock__meta">
+          <span id="progress-label">資料收集中… 進度 0%</span>
+          <span id="progress-eta" class="muted">正在抓取評論與競品資料</span>
+        </div>
       </div>
-      <div class="footer-section">
-        <h3>聯絡我們</h3>
-        <ul>
-          <li><a href="about.html">關於我們</a></li>
-          <li><a href="https://line.me/ti/p/@star-up" target="_blank">LINE @star-up</a></li>
-          <li><a href="mailto:hello@pulse-intelligence.com">hello@pulse-intelligence.com</a></li>
-        </ul>
+    </section>
+
+    <!-- S3｜個人化確認卡 -->
+    <section id="stage-s3" class="stage" data-stage="s3" hidden>
+      <div class="stage-panel stage-panel--summary">
+        <header class="stage-panel__header">
+          <span class="stage-tag">專屬調校完成</span>
+          <h2>設定完成，正在生成專屬報表與品牌頁</h2>
+          <p class="muted">完成後您會看到：① AI 報表摘要 ② 本週三件事 ③ 品牌小站預覽與回覆草稿。</p>
+        </header>
+
+        <div class="summary-card">
+          <dl class="summary-list">
+            <div>
+              <dt>重點目標</dt>
+              <dd id="summary-goal">—</dd>
+            </div>
+            <div>
+              <dt>回覆語氣</dt>
+              <dd id="summary-tone">—</dd>
+            </div>
+            <div>
+              <dt>指定競品</dt>
+              <dd id="summary-competitors">系統自動挑選中…</dd>
+            </div>
+          </dl>
+          <button id="summary-confirm" type="button" class="btn btn--primary">保持這樣，很好</button>
+        </div>
       </div>
-    </div>
-    <div class="footer-bottom">
-      <p>&copy; 2025 脈動智匯有限公司 統編：60514204 | 保留所有權利</p>
-    </div>
+
+      <div class="progress-dock">
+        <div class="progress-dock__bar">
+          <div id="progress-bar-s3" class="progress-dock__fill" style="width: 0%;"></div>
+        </div>
+        <div class="progress-dock__meta">
+          <span id="progress-label-s3">資料收集中… 進度 0%</span>
+          <span id="progress-eta-s3" class="muted">我們會即時通知完成狀態</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- S4｜分析完成 -->
+    <section id="stage-s4" class="stage" data-stage="s4" hidden>
+      <div class="stage-panel stage-panel--result">
+        <header class="stage-panel__header">
+          <span class="stage-tag stage-tag--success">S4 · 分析完成</span>
+          <h2>初檢完成！這是您的 AI 報表預覽</h2>
+          <p class="muted">我們已完成差距雷達、三件事與回覆草稿，並為你準備品牌樣本報表，點擊即可查看。</p>
+        </header>
+
+        <div class="result-grid">
+          <article class="result-card" id="result-radar">
+            <h3>差距雷達</h3>
+            <p class="muted">星等、評論量與距離差距即時更新</p>
+            <ul id="result-radar-list" class="result-list"></ul>
+          </article>
+
+          <article class="result-card" id="result-actions">
+            <h3>本週三件事</h3>
+            <p class="muted">直接複製即可交派團隊執行</p>
+            <ul id="result-actions-list" class="result-list"></ul>
+            <button id="copy-actions" type="button" class="btn btn--ghost">複製三件事</button>
+          </article>
+
+          <article class="result-card" id="result-drafts">
+            <h3>三版回覆草稿</h3>
+            <p class="muted">已套用您的語氣偏好，可一鍵複製</p>
+            <div id="result-drafts-list" class="drafts"></div>
+          </article>
+        </div>
+
+        <div class="result-actions">
+          <a id="cta-trial" class="btn btn--primary" href="https://line.me/ti/p/@star-up" target="_blank" rel="noopener">開始 7 天體驗</a>
+          <a id="cta-plan" class="btn btn--outline" href="https://chelov134999.app.n8n.cloud/pay/star-guard-4980" target="_blank" rel="noopener">了解 4,980 「當天了」方案</a>
+          <button id="return-home" type="button" class="btn btn--ghost">返回主畫面</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- S5｜超時分支 -->
+    <section id="stage-s5" class="stage" data-stage="s5" hidden>
+      <div class="stage-panel stage-panel--timeout">
+        <header class="stage-panel__header">
+          <span class="stage-tag stage-tag--warning">S5 · 已排程完成後推送</span>
+          <h2>資料較多，已自動排程</h2>
+          <p class="muted">完成後會第一時間發到 LINE。您剛才的客製化設定已儲存，報告會套用您的語氣與關注競品。</p>
+        </header>
+
+        <div class="timeout-actions">
+          <a id="timeout-sample" class="btn btn--primary" href="sample-report.html" target="_blank" rel="noopener">查看樣本報表</a>
+          <button id="timeout-weekly" type="button" class="btn btn--outline">先拿本週三件事（試算版）</button>
+        </div>
+        <button id="timeout-back" type="button" class="btn btn--ghost">返回主畫面</button>
+      </div>
+  </section>
+ </main>
+
+  <footer class="footer-link">
+    <a href="about.html" id="about-link">關於我們</a>
   </footer>
+
+  <div class="toast" id="toast" hidden></div>
 
   <script src="https://static.line-scdn.net/liff/edge/versions/2.21.2/sdk.js"></script>
   <script src="config.runtime.js"></script>

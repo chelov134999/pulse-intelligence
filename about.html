@@ -3,239 +3,292 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>關於我們｜星級引擎</title>
+  <title>關於星級引擎</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    :root {
+      --bg: #f5f8ff;
+      --card: #ffffff;
+      --subtle: #eef3ff;
+      --stroke: rgba(21, 45, 90, 0.12);
+      --shadow: 0 24px 48px -32px rgba(15, 23, 42, 0.28);
+      --text: #1f2937;
+      --muted: #566074;
+      --primary: #1d4ed8;
+      --primary-600: #1741b8;
+      --accent: #7a3bff;
+      --warm: #ff8a4c;
+      --link: #77aadd;
+      --radius: 22px;
+      --font: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
     }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
     body {
-      font-family: 'Noto Sans TC', sans-serif;
-      line-height: 1.8;
-      color: #333;
-      background: #f5f5f5;
-      padding: 2rem 1rem;
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font);
+      color: var(--text);
+      background: radial-gradient(circle at 18% 12%, rgba(119, 170, 221, 0.18), transparent 46%),
+                  radial-gradient(circle at 78% 18%, rgba(255, 217, 187, 0.18), transparent 48%),
+                  linear-gradient(135deg, #f9fbff 0%, #eef4ff 58%, #e7f1ff 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(32px, 6vw, 72px) 20px;
     }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: white;
-      padding: 3rem 2rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    h1 {
-      font-size: 2rem;
-      color: #2c3e50;
-      margin-bottom: 0.5rem;
-      border-bottom: 3px solid #3498db;
-      padding-bottom: 1rem;
-    }
-    .tagline {
-      font-size: 1.2rem;
-      color: #3498db;
-      margin-bottom: 2rem;
-      font-weight: 500;
-    }
-    h2 {
-      font-size: 1.5rem;
-      color: #34495e;
-      margin-top: 2.5rem;
-      margin-bottom: 1rem;
-      padding-left: 0.75rem;
-      border-left: 4px solid #3498db;
-    }
-    p {
-      margin-bottom: 1rem;
-      color: #555;
-    }
-    .highlight-box {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 2rem;
-      border-radius: 8px;
-      margin: 2rem 0;
-    }
-    .highlight-box h3 {
-      font-size: 1.3rem;
-      margin-bottom: 1rem;
-    }
-    .stats {
+
+    main {
+      width: min(900px, 100%);
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      padding: clamp(32px, 6vw, 58px);
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      margin: 2rem 0;
+      gap: 28px;
     }
-    .stat-card {
-      background: #ecf0f1;
-      padding: 1.5rem;
-      border-radius: 8px;
-      text-align: center;
+
+    header {
+      display: grid;
+      gap: 18px;
     }
-    .stat-number {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: #3498db;
+
+    .heading {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .heading-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 22px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(29, 78, 216, 0.95), rgba(37, 99, 235, 0.8));
+      color: #ffffff;
+      box-shadow: 0 18px 36px -24px rgba(29, 78, 216, 0.5);
+    }
+
+    .heading-badge__icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #ffffff;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 8px 20px -12px rgba(29, 78, 216, 0.45);
+    }
+
+    .heading-badge__icon img {
+      width: 24px;
+      height: 24px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 4vw, 2.8rem);
+      letter-spacing: 0.02em;
+    }
+
+    header h1::after {
+      content: '';
       display: block;
+      width: 48px;
+      height: 3px;
+      margin-top: 12px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(29, 78, 216, 0.3), rgba(122, 59, 255, 0.4));
     }
-    .stat-label {
-      color: #7f8c8d;
-      font-size: 0.9rem;
-      margin-top: 0.5rem;
+
+    header p {
+      margin: 0;
+      font-size: 1.05rem;
+      color: var(--muted);
+      line-height: 1.8;
     }
-    .company-info {
-      background: #f8f9fa;
-      padding: 1.5rem;
-      border-radius: 8px;
-      margin: 2rem 0;
-    }
-    .company-info p {
-      margin-bottom: 0.75rem;
-    }
-    .company-info strong {
-      color: #2c3e50;
-      display: inline-block;
-      min-width: 100px;
-    }
-    .values {
+
+    .section-card {
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      padding: clamp(24px, 4vw, 36px);
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
-      margin: 2rem 0;
+      gap: 18px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    .value-card {
-      border: 2px solid #3498db;
-      padding: 1.5rem;
-      border-radius: 8px;
+
+    .section-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px -30px rgba(15, 23, 42, 0.3);
     }
-    .value-card h3 {
-      color: #3498db;
-      margin-bottom: 0.75rem;
-      font-size: 1.2rem;
+
+    .section-card--hero {
+      background: linear-gradient(135deg, rgba(77, 114, 255, 0.18), rgba(199, 209, 255, 0.08));
+      border-color: rgba(29, 78, 216, 0.25);
     }
-    .contact-cta {
-      background: #3498db;
-      color: white;
-      padding: 2rem;
-      border-radius: 8px;
+
+    .section-card--cool {
+      background: linear-gradient(135deg, rgba(122, 59, 255, 0.12), rgba(221, 229, 255, 0.1));
+      border-color: rgba(122, 59, 255, 0.22);
+    }
+
+    .section-card--warm {
+      background: linear-gradient(135deg, rgba(255, 193, 166, 0.18), rgba(255, 225, 205, 0.12));
+      border-color: rgba(255, 138, 76, 0.24);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.35rem;
+      color: var(--primary);
+    }
+
+    p {
+      line-height: 1.7;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 24px;
+      color: var(--muted);
+      line-height: 1.8;
+      list-style: none;
+    }
+
+    ul li {
+      position: relative;
+      padding-left: 14px;
+    }
+
+    ul li::before {
+      content: '';
+      position: absolute;
+      left: -18px;
+      top: 0.75em;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px rgba(122, 59, 255, 0.45);
+    }
+
+    .note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .cta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .cta a {
+      flex: 1 1 240px;
       text-align: center;
-      margin-top: 3rem;
-    }
-    .contact-cta h3 {
-      margin-bottom: 1rem;
-    }
-    .contact-cta a {
-      color: white;
-      text-decoration: none;
+      padding: 14px 20px;
+      border-radius: 14px;
       font-weight: 600;
-      border-bottom: 2px solid white;
-    }
-    .back-link {
-      display: inline-block;
-      margin-top: 2rem;
-      color: #3498db;
       text-decoration: none;
-      font-weight: 500;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border: 1px solid transparent;
     }
-    .back-link:hover {
+
+    .cta a.primary {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 18px 36px -24px rgba(29, 78, 216, 0.5);
+    }
+
+    .cta a.primary:hover { transform: translateY(-2px); }
+
+    .cta a.secondary {
+      background: var(--warm);
+      color: #ffffff;
+      box-shadow: 0 18px 32px -24px rgba(255, 138, 76, 0.4);
+    }
+
+    .cta a.secondary:hover { transform: translateY(-2px); }
+
+    .contact {
+      margin: 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .contact a {
+      color: var(--link);
       text-decoration: underline;
+    }
+
+    @media (max-width: 640px) {
+      main { border-radius: 18px; padding: 28px; }
+      .heading { flex-direction: column; align-items: flex-start; }
+      .cta a { flex: 1 1 100%; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>關於我們</h1>
-    <p class="tagline">讓每一則評論，都成為商家成長的動力</p>
+  <main>
+    <header>
+      <div class="heading">
+        <div class="heading-badge">
+          <span class="heading-badge__icon"><img src="logo.png" alt="星級引擎" width="24" height="24" /></span>
+          <span>脈動智匯｜星級引擎</span>
+        </div>
+        <h1>讓 Google 與 AI 同時看見你的品牌</h1>
+      </div>
+      <p>星級引擎是脈動智匯的 AI 品牌守護服務。透過四格初檢、即時監控與自動生成的品牌小站，我們讓中小商家也能把「被看見、被喜歡、被信任」一次做到位。</p>
+    </header>
 
-    <p>星級引擎（Star Engine）是由<strong>脈動智匯有限公司</strong>開發的 AI 智能評論管理平台。我們相信，在數位時代，Google 評論不只是顧客的心聲，更是商家持續進步的關鍵指標。</p>
+    <section class="section-card section-card--hero">
+      <h2>我們帶來的改變</h2>
+      <ul>
+        <li><strong>可見度提升：</strong> AI 生成的品牌小站搭配結構化標記，讓 Google 更快讀懂你的優勢。</li>
+        <li><strong>掌控力回到手上：</strong> 每日、每週、每月報表把危機與亮點轉成「下一步行動」。</li>
+        <li><strong>回覆更有溫度：</strong> 負評草稿 2~3 版直接送到 LINE，不漏任何一則評論。</li>
+      </ul>
+    </section>
 
-    <div class="highlight-box">
-      <h3>我們的使命</h3>
-      <p>幫助每一家實體商家，在 15 分鐘內掌握負評危機，用智能分析取代人工猜測，用數據洞察驅動營收成長。</p>
+    <section class="section-card section-card--cool">
+      <h2>我們怎麼做到</h2>
+      <ul>
+        <li><strong>30 秒初檢：</strong> 四格資料啟動，馬上取得 AI 報表預覽與品牌小站範本。</li>
+        <li><strong>24/7 智能守護：</strong> 營業時段 10 分鐘偵測，夜間合併彙整，讓通知既即時又不吵。</li>
+        <li><strong>品牌內容矩陣：</strong> 好評、待辦、草稿會自動轉成 SEO 友善的網頁內容與案例。</li>
+      </ul>
+      <p class="note">全程由智能客服協助，無需額外學習或加人力。</p>
+    </section>
+
+    <section class="section-card section-card--warm">
+      <h2>我們是誰</h2>
+      <p>脈動智匯是一支專注 AI 商業應用的團隊，擁有超過十年的品牌營運與資料處理經驗。我們服務過餐飲、醫美、零售、旅宿等產業，知道中小商家在人力、時間與學習上的真實限制。</p>
+      <p>星級引擎因此被設計為「全自動、零代發、資料可掌控」的品牌守護方案：我們負責把評論、競品與行銷資訊整合好，讓你專注在現場體驗與營運決策。</p>
+    </section>
+
+    <section class="section-card">
+      <h2>為什麼店家選擇我們</h2>
+      <ul>
+        <li><strong>見效快：</strong> 上線 30 分鐘內即可看到 AI 報表預覽、三件事待辦與草稿。</li>
+        <li><strong>可驗證：</strong> 每份報表都有明確指標與執行建議，改善成效看得見。</li>
+        <li><strong>可持續：</strong> 品牌小站長期聚合好評與案例，成為永續的公眾資產。</li>
+      </ul>
+    </section>
+
+    <div class="cta">
+      <a class="primary" href="index.html">預約完整診斷</a>
+      <a class="secondary" href="sample-report.html">預覽智慧報表</a>
     </div>
 
-    <h2>為什麼選擇星級引擎？</h2>
-
-    <div class="stats">
-      <div class="stat-card">
-        <span class="stat-number">≤15</span>
-        <span class="stat-label">分鐘內警報推送</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-number">10</span>
-        <span class="stat-label">分鐘一次監控</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-number">5</span>
-        <span class="stat-label">家競品智能追蹤</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-number">AI</span>
-        <span class="stat-label">智能回覆草稿生成</span>
-      </div>
-    </div>
-
-    <h2>我們的核心價值</h2>
-
-    <div class="values">
-      <div class="value-card">
-        <h3>⚡ 即時回應</h3>
-        <p>1-3★ 負評 15 分鐘內推送警報，讓您不錯過任何一個挽回顧客的機會。</p>
-      </div>
-      <div class="value-card">
-        <h3>🧠 智能分析</h3>
-        <p>AI 自動分析評論主題、情緒趨勢，並生成專業回覆草稿，節省 80% 處理時間。</p>
-      </div>
-      <div class="value-card">
-        <h3>📊 數據驅動</h3>
-        <p>星級駕駛艙提供日/週/月完整報告，用數據證明您的努力成果。</p>
-      </div>
-      <div class="value-card">
-        <h3>🎯 競品洞察</h3>
-        <p>自動追蹤 5 家同業競品，了解市場動態，掌握競爭優勢。</p>
-      </div>
-    </div>
-
-    <h2>我們的故事</h2>
-    <p>創立於 2025 年，脈動智匯團隊由資深 AI 工程師與商業顧問組成。我們看到許多優秀的實體店家，因為無法即時回應負評而流失顧客，或是花費大量時間手動整理評論數據。</p>
-    <p>因此，我們結合 Google Places API、LINE 通訊技術與先進的 AI 語言模型，打造出<strong>星級引擎</strong>——一個讓商家「當天就能處理完評論」的智能助理。</p>
-
-    <h2>公司資訊</h2>
-    <div class="company-info">
-      <p><strong>公司名稱：</strong>脈動智匯有限公司</p>
-      <p><strong>統一編號：</strong>60514204</p>
-      <p><strong>服務名稱：</strong>星級引擎（Star Engine）</p>
-      <p><strong>成立時間：</strong>2025 年</p>
-      <p><strong>主要業務：</strong>AI 智能評論管理、商業數據分析、自動化工作流</p>
-    </div>
-
-    <h2>技術架構</h2>
-    <p>我們採用業界領先的技術棧，確保服務穩定可靠：</p>
-    <ul style="margin-left: 2rem; color: #555;">
-      <li><strong>資料來源</strong>：Google Places API（官方授權）+ ScraperAPI（補漏機制）</li>
-      <li><strong>通訊平台</strong>：LINE Official Account + LIFF（輕量化應用）</li>
-      <li><strong>自動化引擎</strong>：n8n Cloud（9 節點精簡工作流）</li>
-      <li><strong>AI 模型</strong>：OpenAI GPT-4 + Map-Reduce 架構</li>
-      <li><strong>資料存儲</strong>：Google Sheets/Drive + SQLite（雙層架構）</li>
-    </ul>
-
-    <h2>我們的承諾</h2>
-    <p>✅ <strong>隱私保護</strong>：遵循台灣個資法，所有資料加密存儲<br>
-    ✅ <strong>服務穩定</strong>：99% 以上服務可用率<br>
-    ✅ <strong>持續進化</strong>：每月功能更新，根據用戶反饋優化<br>
-    ✅ <strong>透明計費</strong>：無隱藏費用，可隨時升降級方案</p>
-
-    <div class="contact-cta">
-      <h3>準備好提升您的星級了嗎？</h3>
-      <p>立即加入 LINE 官方帳號 <a href="https://line.me/ti/p/@star-up">@star-up</a>，開始 30 秒免費初檢！</p>
-      <p style="margin-top: 1.5rem;">或來信洽詢：<a href="mailto:hello@pulse-intelligence.com">hello@pulse-intelligence.com</a></p>
-    </div>
-
-    <a href="index.html" class="back-link">← 返回首頁</a>
-  </div>
+    <p class="contact">需要協助？ 寫信 <a href="mailto:ai@mdzh.io">ai@mdzh.io</a> 或加入官方 LINE <a href="https://line.me/ti/p/@star-up" target="_blank" rel="noopener">@star-up</a></p>
+  </main>
 </body>
 </html>
